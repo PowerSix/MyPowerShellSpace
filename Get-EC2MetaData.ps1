@@ -10,7 +10,7 @@
     Version   : 2018-03-01 - v1.1 - Now detecting types of userdata. Output reformatted. Colors added.
                 2018-02-28 - v1.0 - Initial version.
 
-    Scripts are usually created as part of http://mypowershell.space learning tutorials
+    Scripts are usually created as part of http://mypowershell.space learning tutorials.
     Original post: http://mypowershell.space/index.php/2018/03/01/i-need-meta-data-all-of-it
 
     More scripts at GitHub: https://github.com/PowerSix/MyPowerShellSpace
