@@ -2,7 +2,7 @@
 .SYNOPSIS
     Extract all instance metadata information.
 .DESCRIPTION
-    Get dynamic, meta and user data from the metadata server of the EC2 instance.
+    Get dynamic, meta and user data from the metadata server of the EC2 Windows or Linux instance.
 .NOTES
     File name : Get-EC2MetaData.ps1
     Author    : Sinisa Mikasinovic - six@mypowershell.space
