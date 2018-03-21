@@ -1,19 +1,21 @@
-<# 
-.SYNOPSIS 
+<#
+.SYNOPSIS
 	Get administrator password of your Windows EC2 instances.
-.DESCRIPTION 
+.DESCRIPTION
     Run to get the instance information and password of your newest instances. Password unavailable for instances launched from AMIs.
-.NOTES 
+.NOTES
     File name : Get-EC2Password.ps1
     Author    : Sinisa Mikasinovic - six@mypowershell.space
-    Published : 13-Dec-17
-	Version   : 2017-12-12 - 1.2 - Added -Region switch and input parsing.
-	Version   : 2017-11-24 - 1.1 - Defaults to instances launched in last 24 hours. Specify [int]$DaysOld in days to override.
-	Version   : 2017-11-23 - 1.0 - Initial version.
+	Published : 13-Dec-17
+	Version   : 2018-03-21 - 1.4 - Proper parametrization added. Run -Help for information. -ShowTerminated switch will show otherwise suppressed output for terminated instances.
+				2018-03-06 - 1.3 - Ignoring warning spam from updated Get-EC2PasswordData. Tag alias removed from Amazon.EC2.Model.Instance, using Tags now. Name duplication fixed.
+				2017-12-12 - 1.2 - Added -Region switch and input parsing.
+				2017-11-24 - 1.1 - Defaults to instances launched in last 24 hours. Specify [int]$DaysOld in days to override.
+				2017-11-23 - 1.0 - Initial version.
 
 	Script created as part of a learning tutorial at http://mypowershell.space
 	http://mypowershell.space/index.php/2017/12/13/how-to-get-my-ec2-instance-password/
-	
+
 	More scripts at GitHub: https://github.com/PowerSix/MyPowerShellSpace
 
     Expected functionality may be different, so make sure you give the script a test run first.
@@ -21,44 +23,75 @@
 
 	This script example is provided "AS IS", without warranties or conditions of any kind, either expressed or implied.
     By using this script, you agree that only you are responsible for any resulting damages, losses, liabilities, costs or expenses.
-.EXAMPLE 
+.PARAMETER KeyFolder
+    Specifies the location of PEM keys. Defaults to C:\Users\<username>\Downloads\amazon\keys
+.PARAMETER Region
+    Specifies the region in which to look for EC2 instances. Defaults to eu-west-1.
+.PARAMETER DaysOld
+    Specifies the age of the instance to look for. Defaults to 1, covering instances launched in the last 24 hours.
+.PARAMETER ShowTerminated
+	If specified, terminated instances will be incuded in the output. Otherwise supressed.
+.PARAMETER Help
+    If specified, shows the script information.
+.EXAMPLE
     Get-EC2Password.ps1
 	Runs through all instances in the default region and provides information and password for ones not older than a day.
-.EXAMPLE 
-    Get-EC2Password.ps1 10
-	Runs through all instances in the default region and provides information and password for ones not older than 10 days.
-.EXAMPLE 
-    Get-EC2Password.ps1 40 us-east-1
-	Runs through all instances in us-east-1 region and provides information and password for ones not older than 40 days.
-.EXAMPLE 
-    Get-EC2Password.ps1 us-east-1
-	This will get you nowhere :-) Modify script default parameters to change the functionality.
-.LINK 
+.EXAMPLE
+    Get-EC2Password.ps1 -Region us-east-1 -DaysOld 10
+	Runs through all instances in us-east-1 region and provides information and password for ones not older than 10 days.
+.EXAMPLE
+    Get-EC2Password.ps1 -KeyFolder C:\Keys
+	Specifies the folder which holds EC2 instance private keys.
+.EXAMPLE
+    Get-EC2Password.ps1 -Help
+	Displays script information.
+.LINK
 	http://mypowershell.space
 .LINK
 	https://github.com/PowerSix/MyPowerShellSpace
 #>
 
-# Default settings
-# KeyFolder must be valid
-$KeyFolder = "C:\Users\$env:USERNAME\Ec2Keys"
-$DaysOld = 1
-$Region = "eu-west-1"
+Param(
+    [string]$KeyFolder = $(Join-Path -Path $env:USERPROFILE -ChildPath "Downloads\amazon\keys"),
+    [string]$Region = "eu-west-1",
+    [int]$DaysOld = 1,
+	[switch]$ShowTerminated,
+	[switch]$Help
+)
 
-# Arguments from the command line
-# Swap 0 and 1 if you want region first, days last
-if ($args[0]) {$DaysOld = $args[0]}
-if ($args[1]) {$Region = $args[1]}
+# Display script information and exit
+if ($Help) {
+	Write-Host "`nFile name : " -ForegroundColor Cyan -NoNewLine
+		Write-host "Get-EC2Password.ps1" -ForegroundColor Yellow
+	Write-Host "Author    : " -ForegroundColor Cyan -NoNewLine
+		Write-host "Sinisa Mikasinovic - six@mypowershell.space" -ForegroundColor Yellow
+	Write-Host "Update    : " -ForegroundColor Cyan -NoNewLine
+		Write-host "https://github.com/PowerSix/MyPowerShellSpace`n" -ForegroundColor Green
+
+	Write-Host "Published : " -ForegroundColor Cyan -NoNewLine
+		Write-host "13-Dec-17" -ForegroundColor Yellow
+	Write-Host "Version   : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2018-03-21 - 1.4 - Proper parametrization added. Run -Help for information. -ShowTerminated switch will show otherwise suppressed output for terminated instances." -ForegroundColor Yellow
+	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2018-03-06 - 1.3 - Ignoring warning spam from updated Get-EC2PasswordData. Tag alias removed from Amazon.EC2.Model.Instance, using Tags now. Name duplication fixed." -ForegroundColor Yellow
+	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2017-12-12 - 1.2 - Added -Region switch and input parsing." -ForegroundColor Yellow
+	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2017-11-24 - 1.1 - Defaults to instances launched in last 24 hours. Specify [int]$DaysOld in days to override." -ForegroundColor Yellow
+	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2017-11-23 - 1.0 - Initial version.`n" -ForegroundColor Yellow
+
+	Write-Host "Examples  : " -ForegroundColor Cyan -NoNewLine
+		Write-Host "Get-Help Get-EC2Password.ps1 -Examples" -ForegroundColor Yellow
+	Write-Host "Full help : " -ForegroundColor Cyan -NoNewLine
+		Write-Host "Get-Help Get-EC2Password.ps1 -Full`n" -ForegroundColor Yellow
+	break
+}
 
 # Basic input parsing
 if (!(Test-Path ($KeyFolder))) {
-	Write-Host "`nERROR: Invalid key folder! Edit script and change `$KeyFolder value." -ForegroundColor Yellow
+	Write-Host "`nERROR: Invalid key folder!" -ForegroundColor Yellow
 	Write-Host "ERROR: $KeyFolder`n" -ForegroundColor Yellow
-	break
-}
-if ($DaysOld -isnot [int]) {
-	Write-Host "`nERROR: Invalid number of days! Value must be integer." -ForegroundColor Yellow
-	Write-Host "ERROR: $DaysOld`n" -ForegroundColor Yellow
 	break
 }
 if ($Region -notin (Get-AWSRegion).Region) {
@@ -85,7 +118,7 @@ foreach ($Instance in $Instances) {
 
 	if ($LaunchTime -gt (Get-Date).AddDays(-$DaysOld).ToString($TimeString)) {
 		try {
-			$Password = $(Get-EC2PasswordData -InstanceId $($Instance.InstanceId) -PemFile $($KeyFolder + "\" + $($Instance.KeyName) + ".pem") -Region $Region)
+			$Password = $(Get-EC2PasswordData -InstanceId $($Instance.InstanceId) -PemFile $($KeyFolder + "\" + $($Instance.KeyName) + ".pem") -Region $Region -WarningAction Ignore)
 		}
 		catch {
 			if ($Instance.State.Name -eq "Terminated") {
@@ -94,8 +127,9 @@ foreach ($Instance in $Instances) {
 				$Password = "* Not available"
 			}
 		}
+		if (!$Password) {$Password = "* Not available"}
 
-		foreach ($Tag in $Instance.Tag | Where-Object {$_.Key -eq "Name"}) {$Name = $Tag.Value}
+		foreach ($Tag in $Instance.Tags | Where-Object {$_.Key -eq "Name"}) {$Name = $($Tag.Value)}
 
 		$Properties = [ordered]@{
 			InstanceId = $Instance.InstanceId
@@ -106,8 +140,12 @@ foreach ($Instance in $Instances) {
 			Password = $Password
 			LaunchTime = $LaunchTime
 		}
-		$Result = New-Object -TypeName psobject -Property $Properties
-		$Results = $Results + $Result
+		if ($Instance.State.Name -eq "Terminated" -and !($ShowTerminated)) {
+			# Drop terminated instance output
+		} else {
+			$Result = New-Object -TypeName psobject -Property $Properties
+			$Results = $Results + $Result
+		}
 	}
 }
 $Results | Format-Table
