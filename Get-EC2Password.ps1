@@ -7,7 +7,8 @@
     File name : Get-EC2Password.ps1
     Author    : Sinisa Mikasinovic - six@mypowershell.space
 	Published : 13-Dec-17
-	Version   : 2018-03-21 - 1.4 - Proper parametrization added. Run -Help for information. -ShowTerminated switch will show otherwise suppressed output for terminated instances.
+	Version   : 2018-03-27 - 1.5 - Added StateTransitionReason to output, for instances in Stopped and Terminated state.
+				2018-03-21 - 1.4 - Proper parametrization added. Run -Help for information. -ShowTerminated switch will show otherwise suppressed output for terminated instances.
 				2018-03-06 - 1.3 - Ignoring warning spam from updated Get-EC2PasswordData. Tag alias removed from Amazon.EC2.Model.Instance, using Tags now. Name duplication fixed.
 				2017-12-12 - 1.2 - Added -Region switch and input parsing.
 				2017-11-24 - 1.1 - Defaults to instances launched in last 24 hours. Specify [int]$DaysOld in days to override.
@@ -70,7 +71,10 @@ if ($Help) {
 
 	Write-Host "Published : " -ForegroundColor Cyan -NoNewLine
 		Write-host "13-Dec-17" -ForegroundColor Yellow
+
 	Write-Host "Version   : " -ForegroundColor Cyan -NoNewLine
+		Write-host "2018-03-27 - 1.5 - Added StateTransitionReason to output, for instances in Stopped and Terminated state." -ForegroundColor Yellow
+	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
 		Write-host "2018-03-21 - 1.4 - Proper parametrization added. Run -Help for information. -ShowTerminated switch will show otherwise suppressed output for terminated instances." -ForegroundColor Yellow
 	Write-Host "          : " -ForegroundColor Cyan -NoNewLine
 		Write-host "2018-03-06 - 1.3 - Ignoring warning spam from updated Get-EC2PasswordData. Tag alias removed from Amazon.EC2.Model.Instance, using Tags now. Name duplication fixed." -ForegroundColor Yellow
@@ -139,6 +143,7 @@ foreach ($Instance in $Instances) {
 			PrivateIp = $Instance.PrivateIpAddress
 			Password = $Password
 			LaunchTime = $LaunchTime
+			TransitionReason = $Instance.StateTransitionReason
 		}
 		if ($Instance.State.Name -eq "Terminated" -and !($ShowTerminated)) {
 			# Drop terminated instance output
