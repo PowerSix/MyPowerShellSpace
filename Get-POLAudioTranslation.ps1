@@ -106,7 +106,8 @@ if ($Help) {
 	break
 }
 
-# Check if AWS Tools for Windows PowerShell module is loaded. Otherwise the initial run is slow, without explanation, while the module loads.
+# Check if AWS Tools for Windows PowerShell module is loaded
+# Otherwise the initial run is slow, without explanation, while the module loads
 $LoadedModules = Get-Module
 foreach ($Module in $LoadedModules.Name) {
     if ($Module -eq "AWSPowerShell") {
@@ -119,8 +120,6 @@ if (!$Loaded) {
     Import-Module AWSPowerShell
     Write-Host "done!" -ForegroundColor Green
 }
-
-$AudioPlayer = "C:\Users\mikasino\Dropbox\Program Files\VLC\vlc.exe" ### debug. remove.
 
 if (!(Test-Path -Path $AudioPlayer)) {
     if (!$Quiet) {
@@ -157,6 +156,8 @@ Switch ($Language) {
 }
 
 if ($PollyLanguage -in "N/A", "" -or $Quiet) {
+    # Unsupported languages can't be played via Polly
+    # Also, -Quiet forces text output only
     $PollyText = ConvertTo-TRNTargetLanguage -Text $Text -SourceLanguageCode en -TargetLanguageCode $TRNLanguage
     Write-Host "`nOriginal text:" -ForegroundColor Cyan
     Write-Host $Text -ForegroundColor Yellow
@@ -170,7 +171,8 @@ if ($PollyLanguage -in "N/A", "" -or $Quiet) {
 } else {
     $PollyVoices = Get-POLVoice -LanguageCode $PollyLanguage
     $PollyText = ConvertTo-TRNTargetLanguage -Text $Text -SourceLanguageCode en -TargetLanguageCode $TRNLanguage
-    # "~" is set to default home location to support multiple platforms. Will cause issues if unresolved.
+
+    # "~" is set to default home location to support multiple platforms - Will cause issues if unresolved
     $AudioDirectory = Resolve-Path -Path $AudioDirectory
     if (!(Test-Path $AudioDirectory)) {
         try {
@@ -184,6 +186,7 @@ if ($PollyLanguage -in "N/A", "" -or $Quiet) {
     }
     Set-Content -Path $AudioTempFile -Value $PollyText
 
+    # Polly voice selection
     if ($Voice -eq "Random") {
         $RandomVoice = Get-Random -InputObject $PollyVoices
         $PollyVoice = $RandomVoice
@@ -191,12 +194,14 @@ if ($PollyLanguage -in "N/A", "" -or $Quiet) {
         $PollyVoice = Get-POLVoice | Where-Object Id -eq $Voice
     }
 
+    # Encode Polly speech into an output file
     $OutputStream = New-Object System.IO.FileStream "$AudioDirectory\$Voice.$AudioFormat", Create
     $AudioText = Get-Content -Path $AudioTempFile
     $AudioSpeech = Get-POLSpeech -Text $AudioText -VoiceId $PollyVoice.Id -OutputFormat $AudioFormat -TextType text
     $AudioSpeech.AudioStream.CopyTo($OutputStream)
     $OutputStream.Close()
 
+    # Display and play final results
     Write-Host "`nOriginal text:" -ForegroundColor Cyan
     Write-Host $Text -ForegroundColor Yellow
     Write-Host "`n$($PollyVoice.Name) ($($PollyVoice.Gender)/$($PollyVoice.LanguageName)) speaking $($Language):" -ForegroundColor Cyan
