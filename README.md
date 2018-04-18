@@ -2,7 +2,7 @@
 
 Date | Script | Description | Link
 --- | --- | --- | ---
-2018-04-18 | Get-EC2SafeAddress | Get an Elastic IP address safe from Roskomnadzor righteous crusade | [[Post](http://mypowershell.space/index.php/2018/04/18/looking-for-safe-aws-elastic-ip-this-may-help)]
+2018-04-18 | Get-EC2SafeAddress | Get Elastic IP address safe from Roskomnadzor righteous crusade | [[Post](http://mypowershell.space/index.php/2018/04/18/looking-for-safe-aws-elastic-ip-this-may-help)]
 2018-04-06 | Get-POLAudioTranslation | Uses Translate to translate the text and Polly to speak it | [[Post](http://mypowershell.space/index.php/2018/04/06/polly-and-translate-sugar-and-spice)] [[Video](http://mypowershell.space.s3-eu-west-1.amazonaws.com/vid/Get-POLAudioTranslation_Video.mp4)]
 2018-03-12 | New-IAMPuppetRole | Create IAM policy and role for Puppet nodes | [[Post](http://mypowershell.space/index.php/2018/03/12/opsworks-for-puppet-enterprise-iam-role-for-nodes/)]
 2018-03-01 | Get-EC2MetaData | Extract all Windows or Linux instance metadata information | [[Post](http://mypowershell.space/index.php/2018/03/01/i-need-meta-data-all-of-it/)]
