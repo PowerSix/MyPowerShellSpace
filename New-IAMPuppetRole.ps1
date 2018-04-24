@@ -4,9 +4,9 @@
 
 # Modify names and descriptions of your new policy and role
 $PolicyName = "aws-opsworks-cm-puppet"
-$PolicyDescription = "Allows adding of OpsWorks Puppet Enterprise nodes"
+$PolicyDescription = "Allows adding of OpsWorks for Puppet Automate nodes"
 $RoleName = "aws-opsworks-cm-puppet"
-$RoleDescription = "Allows adding of OpsWorks Puppet Enterprise nodes"
+$RoleDescription = "Allows adding of OpsWorks for Puppet Automate nodes"
 
 
 
@@ -15,6 +15,7 @@ $RoleDescription = "Allows adding of OpsWorks Puppet Enterprise nodes"
 ##########################################
 
 # Version history:
+#   2018-04-24 - v1.1 - Fixes to instance role creation
 #   2018-03-12 - v1.0 - Initial version
 #
 # Execute remotely by running:
@@ -30,9 +31,7 @@ $PolicyDocument = @"
             "Sid": "BUK",
             "Action": [
                 "opsworks-cm:AssociateNode",
-                "opsworks-cm:DescribeNodeAssociationStatus",
-                "opsworks-cm:DescribeServers",
-                "ec2:DescribeTags"
+                "opsworks-cm:DescribeNodeAssociationStatus"
             ],
             "Resource": "*",
             "Effect": "Allow"
@@ -41,6 +40,7 @@ $PolicyDocument = @"
 }
 "@
 
+# '{"Version":"2012-10-17","Statement":[{"Sid":"Jinar","Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
 $RoleDocument = @"
 {
     "Version": "2012-10-17",
@@ -57,14 +57,25 @@ $RoleDocument = @"
 }
 "@
 
+function Show-Error($Message) {
+    Write-Output $Message
+    if ($Error[0].Message) {
+        Write-Output "`nError message: $($Error[0].Message)"
+    } elseif ($Error[0].Exception.Message) {
+        Write-Output "`nError exception: $($Error[0].Exception.Message)"
+    }
+    Write-Output "`n`nFull error: "
+    Write-Output $Error[0] | Format-List -Force
+    break
+}
+
 try {
     Write-Output "Creating IAM policy $PolicyName..."
     $NewPolicy = New-IAMPolicy -PolicyName $PolicyName -PolicyDocument $PolicyDocument -Description $PolicyDescription
     Write-Output "Success!`n"
 }
 catch {
-    Write-Output "Error creating policy!"
-    Write-Output $Error[0] | Format-List * -Force
+    Show-Error "Error creating policy!"
 }
 
 try {
@@ -73,8 +84,7 @@ try {
     Write-Output "Success!`n"
 }
 catch {
-    Write-Output "Error creating role!"
-    Write-Output $Error[0] | Format-List * -Force
+    Show-Error "Error creating role!"
 }
 
 try {
@@ -83,6 +93,23 @@ try {
     Write-Output "Success!`n"
 }
 catch {
-    Write-Output "Error registerting policy!"
-    Write-Output $Error[0] | Format-List * -Force
+    Show-Error "Error registering policy!"
+}
+
+try {
+    Write-Output "Creating IAM instance profile..."
+    $NewInstanceProfile = New-IAMInstanceProfile -InstanceProfileName $RoleName
+    Write-Output "Success!`n"
+}
+catch {
+    Show-Error "Error creating profile!"
+}
+
+try {
+    Write-Output "Adding IAM role to IAM instance profile..."
+    Add-IAMRoleToInstanceProfile -RoleName $RoleName -InstanceProfileName $NewInstanceProfile.InstanceProfileName
+    Write-Output "Success!`n"
+}
+catch {
+    Show-Error "Error adding role!"
 }
