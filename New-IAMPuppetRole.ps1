@@ -4,9 +4,9 @@
 
 # Modify names and descriptions of your new policy and role
 $PolicyName = "aws-opsworks-cm-puppet"
-$PolicyDescription = "Allows adding of OpsWorks for Puppet Automate nodes"
+$PolicyDescription = "Allows adding of OpsWorks for Puppet Enterprise nodes"
 $RoleName = "aws-opsworks-cm-puppet"
-$RoleDescription = "Allows adding of OpsWorks for Puppet Automate nodes"
+$RoleDescription = "Allows adding of OpsWorks for Puppet Enterprise nodes"
 
 
 
