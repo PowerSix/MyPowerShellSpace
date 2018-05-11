@@ -31,7 +31,9 @@ $PolicyDocument = @"
             "Sid": "BUK",
             "Action": [
                 "opsworks-cm:AssociateNode",
-                "opsworks-cm:DescribeNodeAssociationStatus"
+                "opsworks-cm:DescribeNodeAssociationStatus",
+                "opsworks-cm:DescribeServers",
+                "ec2:DescribeTags"
             ],
             "Resource": "*",
             "Effect": "Allow"
