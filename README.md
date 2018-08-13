@@ -2,6 +2,7 @@
 
 Date | Script | Description | Link
 --- | --- | --- | ---
+2018-08-13 |Get-AvailableInstances | Get the list of available instance types in an AWS Region | [[Post](http://mypowershell.space/index.php/2018/08/13/do-you-need-the-list-of-available-instance-types-in-a-particular-aws-region/)]
 2018-05-10 | Set-PerformanceCounters | Automate creation of Performance Monitor Data Collector | [[Post](http://mypowershell.space/index.php/2018/05/10/automate-creation-of-performance-monitor-data-collector-on-an-ec2-instance-or-a-workspace)]
 2018-04-24 | Get-IAMChefRole | Create IAM policy and role for Chef nodes
 2018-04-18 | Get-EC2SafeAddress | Get Elastic IP address not blocked by Roskomnadzor | [[Post](http://mypowershell.space/index.php/2018/04/18/looking-for-safe-aws-elastic-ip-this-may-help)]
